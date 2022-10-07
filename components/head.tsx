@@ -1,7 +1,9 @@
 import Head from "next/head";
 
 export default function MyHead(props: { title?: string }) {
-  const formattedTitle = `${props.title && `${props.title} - `}Social Media`;
+  const formattedTitle = `${
+    props.title ? `${props.title} - ` : ""
+  }Social Media`;
   return (
     <Head>
       <title>{formattedTitle}</title>
