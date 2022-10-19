@@ -35,7 +35,7 @@ export default function Login(props: ({text: string})) {
   const onSubmit = (e: any) => {
     e.preventDefault();
     if (validateEmail(email) && validatePassword(password)) {
-      router.push("/dashboard");
+      router.push("/feed");
     } else {
       toast({
         title: "Invalid email or password",

@@ -9,6 +9,7 @@ import {
   ModalContent,
   ModalOverlay,
   SimpleGrid,
+  Text,
   useDisclosure,
 } from "@chakra-ui/react";
 import { AddIcon, CheckIcon, SpinnerIcon, UnlockIcon } from "@chakra-ui/icons";
@@ -97,6 +98,7 @@ export default function Feed() {
       >
         {Array.from({ length: 20 }).map((_, i) => (
           <Post
+            key={i}
             post={{
               id: "1",
               author: "John Doe",
