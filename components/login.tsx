@@ -7,10 +7,12 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  useBoolean,
   useToast,
   VStack,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
+import { IResultError } from "../hooks/appwrite/types";
 import useInput from "../hooks/useInput";
 import useValidate from "../hooks/useValidate";
 
@@ -19,9 +21,18 @@ const emailRegex = /^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+$/;
 const passwordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/;
 
-export default function Login(props: ({text: string})) {
+export interface ILoginProps {
+  text: string;
+  onSubmit: (email: string, password: string) => Promise<IResultError<boolean>>;
+}
+
+export default function Login(props: ILoginProps) {
+  const { text, onSubmit } = props;
+
   const [email, handleEmail] = useInput("");
   const [password, handlePassword] = useInput("");
+  const [loading, { on: onLoading, off: offLoading }] = useBoolean(false);
+
   const toast = useToast();
 
   const router = useRouter();
@@ -32,17 +43,38 @@ export default function Login(props: ({text: string})) {
   const isEmailValid = useValidate(email, validateEmail);
   const isPasswordValid = useValidate(password, validatePassword);
 
-  const onSubmit = (e: any) => {
+  const onSubmitHandler = async (e: any) => {
     e.preventDefault();
     if (validateEmail(email) && validatePassword(password)) {
-      router.push("/feed");
+      onLoading();
+      const [isSuccess, error] = await onSubmit(email, password);
+      offLoading();
+      if (isSuccess) {
+        toast({
+          title: "Login Success",
+          description: "You are logged in",
+          status: "success",
+          duration: 9000,
+          isClosable: true,
+        });
+        router.push("/feed");
+      }
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      }
     } else {
       toast({
         title: "Invalid email or password",
-        status: 'error',
+        status: "error",
         duration: 9000,
         isClosable: true,
-      })
+      });
     }
   };
 
@@ -63,7 +95,7 @@ export default function Login(props: ({text: string})) {
     }
   };
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmitHandler}>
       <FormControl>
         <FormLabel>Email address</FormLabel>
         <InputGroup>
@@ -92,8 +124,8 @@ export default function Login(props: ({text: string})) {
           {renderStatus(password, isPasswordValid)}
         </InputGroup>
       </FormControl>
-      <Button my={5} type="submit">
-        {props.text}
+      <Button isLoading={loading} my={5} type="submit">
+        {text}
       </Button>
     </form>
   );

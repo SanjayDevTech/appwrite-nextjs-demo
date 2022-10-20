@@ -29,7 +29,7 @@ export default function useAccount(client: Client): IAccountOps {
 
   async function register(email: string, password: string, name?: string) {
     return wrap(() => {
-      return account.create(email, password, name);
+      return account.create(ID.unique(), email, password, name);
     });
   }
 

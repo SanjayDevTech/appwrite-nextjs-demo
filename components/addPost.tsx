@@ -11,17 +11,25 @@ import {
   ModalHeader,
   Textarea,
   useBoolean,
+  useToast,
 } from "@chakra-ui/react";
 import { useState, useRef } from "react";
+import { IResultError } from "../hooks/appwrite/types";
 import useInput from "../hooks/useInput";
 
 export default function AddPost(props: {
   onClose: () => void;
-  onPost: (post: { content: string; imageFile: File | null }) => void;
+  onPost: (post: {
+    content: string;
+    imageFile: File | null;
+  }) => Promise<IResultError<boolean>>;
 }) {
   const { onClose, onPost } = props;
   const [content, handleContent] = useInput("");
+  const [loading, { on: onLoading, off: offLoading }] = useBoolean(false);
   const [isError, errorOps] = useBoolean(false);
+
+  const toast = useToast();
 
   const [file, setFile] = useState<File | null>(null);
   const inputFileRef = useRef<HTMLInputElement>(null);
@@ -39,7 +47,7 @@ export default function AddPost(props: {
               Content must be at least 10 characters long
             </FormErrorMessage>
           </FormControl>
-          <FormControl>
+          <FormControl isDisabled={loading}>
             <FormLabel>Add Image</FormLabel>
             <Button
               onClick={() => {
@@ -68,14 +76,32 @@ export default function AddPost(props: {
       </ModalBody>
       <ModalFooter>
         <Button
+          isLoading={loading}
           colorScheme={"green"}
           mr={3}
-          onClick={() => {
+          onClick={async () => {
             if (content.length < 10) {
               errorOps.on();
             } else {
-              onPost({ content, imageFile: file });
-              onClose();
+              errorOps.off();
+              onLoading();
+              const [isSuccess, error] = await onPost({
+                content,
+                imageFile: file,
+              });
+              offLoading();
+              if (isSuccess) {
+                onClose();
+              }
+              if (error) {
+                toast({
+                  title: "Error",
+                  description: error.message,
+                  status: "error",
+                  duration: 9000,
+                  isClosable: true,
+                });
+              }
             }
           }}
         >

@@ -11,6 +11,7 @@ import {
   SimpleGrid,
   Text,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import { AddIcon, CheckIcon, SpinnerIcon, UnlockIcon } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
@@ -20,12 +21,22 @@ import { ResultState } from "../components/types";
 import useDebounce from "../hooks/useDebounce";
 import useInput from "../hooks/useInput";
 import AddPost from "../components/addPost";
+import useDelay from "../hooks/useDelay";
+import { useRouter } from "next/router";
+import { IResultError } from "../hooks/appwrite/types";
+import { AppwriteException } from "appwrite";
+import useAppwrite from "../hooks/appwrite/useAppwrite";
 
 export default function Feed() {
   const [search, handleSearch] = useInput("");
   const debouncedValue = useDebounce(search, 600);
   const [resultState, setResultState] = useState(ResultState.Idle);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const router = useRouter();
+  const toast = useToast();
+  const execute = useDelay(3000);
+
+  const [account] = useAppwrite();
 
   useEffect(() => {
     fetchPosts();
@@ -57,19 +68,48 @@ export default function Feed() {
     }
   };
 
+  const onLogoutClick = async () => {
+    try {
+      await account.operations.logout();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const onPost = async (post: {
+    content: string;
+    imageFile: File | null;
+  }): Promise<IResultError<boolean>> => {
+    await execute();
+    return [false, new AppwriteException("Error")];
+  };
+
   return (
     <Flex w={"100%"} h={"100%"} direction="column">
       <MyHead title="Feed" />
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <AddPost onClose={onClose} onPost={onClose} />
+          <AddPost onClose={onClose} onPost={onPost} />
         </ModalContent>
       </Modal>
       <Flex bg={"gray.300"} justify={"center"} p={5} align={"center"}>
         <IconButton
           title="Logout"
-          onClick={() => {}}
+          onClick={async () => {
+            const isSuccess = await onLogoutClick();
+            if (isSuccess) {
+              router.push("/auth");
+            } else {
+              toast({
+                title: "Logout failed",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+              });
+            }
+          }}
           aria-label={"logout"}
           icon={<UnlockIcon />}
         />
