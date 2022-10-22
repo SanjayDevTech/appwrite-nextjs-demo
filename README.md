@@ -7,7 +7,7 @@ This is a demo project for [Appwrite](https://appwrite.io) and [NextJS](https://
 ### 1. Clone the project
 
 ```bash
-git clone 
+git clone https://github.com/SanjayDevTech/appwrite-nextjs-demo 
 ```
 
 ### 2. Choose the node package manager
