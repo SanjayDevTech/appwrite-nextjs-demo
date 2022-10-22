@@ -14,17 +14,17 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { AddIcon, CheckIcon, SpinnerIcon, UnlockIcon } from "@chakra-ui/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MyHead from "../components/head";
 import Post from "../components/post";
-import { ResultState } from "../components/types";
+import { IPost, ResultState } from "../components/types";
 import useDebounce from "../hooks/useDebounce";
 import useInput from "../hooks/useInput";
 import AddPost from "../components/addPost";
 import useDelay from "../hooks/useDelay";
 import { useRouter } from "next/router";
 import { IResultError } from "../hooks/appwrite/types";
-import { AppwriteException } from "appwrite";
+import { AppwriteException, ID, Query } from "appwrite";
 import useAppwrite from "../hooks/appwrite/useAppwrite";
 
 export default function Feed() {
@@ -36,21 +36,42 @@ export default function Feed() {
   const toast = useToast();
   const execute = useDelay(3000);
 
-  const [account] = useAppwrite();
+  const [account, collection, bucket] = useAppwrite();
+
+  const [posts, setPosts] = useState<IPost[]>([]);
+
+  const isReady =
+    !account.loading && account.user !== null && account.error === null;
 
   useEffect(() => {
+    if (!account.loading && !account.user) {
+      router.push("/auth");
+    }
+  }, [account.user, account.loading]);
+
+  useEffect(() => {
+    if (!isReady) return;
     fetchPosts();
-  }, [debouncedValue]);
+  }, [debouncedValue, isReady]);
 
   const fetchPosts = async () => {
     setResultState(ResultState.Loading);
-    try {
-      const res = await fetch(
-        `https://jsonplaceholder.typicode.com/posts?title=${debouncedValue}`
+    const queries = [];
+    if (debouncedValue) {
+      queries.push(Query.search("content", debouncedValue));
+    }
+    queries.push(Query.limit(100));
+    const [posts, error] = await collection.query(queries);
+    if (posts) {
+      setPosts(
+        posts.documents.map((t) => ({
+          ...t,
+          created: new Date(t.created),
+        })) as unknown as IPost[]
       );
-      const data = await res.json();
       setResultState(ResultState.Success);
-    } catch (error) {
+    }
+    if (error) {
       setResultState(ResultState.Error);
     }
   };
@@ -79,11 +100,29 @@ export default function Feed() {
 
   const onPost = async (post: {
     content: string;
-    imageFile: File | null;
+    imageFile: File;
   }): Promise<IResultError<boolean>> => {
-    await execute();
-    return [false, new AppwriteException("Error")];
+    const [file, error] = await bucket.create(post.imageFile);
+    if (error) {
+      return [false, error];
+    }
+    const [result, error2] = await collection.create({
+      content: post.content,
+      image: file.$id,
+      author: account.user?.name,
+    });
+    if (error2) {
+      return [false, error2];
+    }
+    fetchPosts();
+    return [true, null];
   };
+
+  if (account.loading) return <Text>Loading...</Text>;
+
+  if (!account.user) {
+    return <></>;
+  }
 
   return (
     <Flex w={"100%"} h={"100%"} direction="column">
@@ -136,17 +175,8 @@ export default function Feed() {
         w={"100%"}
         h={"100%"}
       >
-        {Array.from({ length: 20 }).map((_, i) => (
-          <Post
-            key={i}
-            post={{
-              id: "1",
-              author: "John Doe",
-              content: "g",
-              createdAt: new Date(),
-              image: "https://picsum.photos/200/300",
-            }}
-          />
+        {posts.map((p, i) => (
+          <Post key={p.$id} post={p} getImage={bucket.getFile} />
         ))}
       </SimpleGrid>
     </Flex>

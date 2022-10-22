@@ -1,8 +1,8 @@
 export interface IPost {
-  id: string;
+  $id: string;
+  $createdAt: string;
   content: string;
-  image?: string;
-  createdAt: Date;
+  image: string;
   author: string;
 }
 

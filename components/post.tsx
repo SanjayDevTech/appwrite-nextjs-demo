@@ -1,17 +1,28 @@
 import { Box, Flex, Grid, GridItem, Image, Text } from "@chakra-ui/react";
+import { useMemo } from "react";
 import { IPost } from "./types";
 
-export default function Post(props: { post: IPost }) {
+export default function Post(props: {
+  post: IPost;
+  getImage: (fileId: string) => URL;
+}) {
   const { post } = props;
-  const formattedDate = post.createdAt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "2-digit",
-  });
+  const formattedDate = useMemo(
+    () =>
+      new Date(post.$createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "2-digit",
+      }),
+    [post]
+  );
+
+  const imageUrl = useMemo(() => props.getImage(post.image), [post]);
 
   return (
     <Grid
       w={300}
+      h={"min-content"}
       templateAreas={`
     "content content content"
     "author spacer date"
@@ -24,15 +35,13 @@ export default function Post(props: { post: IPost }) {
     >
       <GridItem area={"content"}>
         <Flex direction={"column"}>
-          {post.image && (
-            <Image
-              w={300}
-              h={300}
-              objectFit={"cover"}
-              objectPosition={"center"}
-              src={post.image}
-            />
-          )}
+          <Image
+            w={300}
+            h={300}
+            objectFit={"cover"}
+            objectPosition={"center"}
+            src={imageUrl.toString()}
+          />
           <Text>{post.content}</Text>
         </Flex>
       </GridItem>

@@ -27,7 +27,8 @@ export default function AddPost(props: {
   const { onClose, onPost } = props;
   const [content, handleContent] = useInput("");
   const [loading, { on: onLoading, off: offLoading }] = useBoolean(false);
-  const [isError, errorOps] = useBoolean(false);
+  const [isContentError, errorContentOps] = useBoolean(false);
+  const [isFileError, errorFileOps] = useBoolean(false);
 
   const toast = useToast();
 
@@ -40,14 +41,14 @@ export default function AddPost(props: {
       <ModalCloseButton />
       <ModalBody>
         <form>
-          <FormControl isInvalid={isError}>
+          <FormControl isInvalid={isContentError}>
             <FormLabel>Add Content</FormLabel>
             <Textarea value={content} onChange={handleContent} />
             <FormErrorMessage>
               Content must be at least 10 characters long
             </FormErrorMessage>
           </FormControl>
-          <FormControl isDisabled={loading}>
+          <FormControl isDisabled={loading} isInvalid={isFileError}>
             <FormLabel>Add Image</FormLabel>
             <Button
               onClick={() => {
@@ -71,6 +72,7 @@ export default function AddPost(props: {
               onChange={(e) => setFile(e.target.files[0])}
               display={"none"}
             />
+            <FormErrorMessage>Choose a file</FormErrorMessage>
           </FormControl>
         </form>
       </ModalBody>
@@ -80,10 +82,15 @@ export default function AddPost(props: {
           colorScheme={"green"}
           mr={3}
           onClick={async () => {
+            errorContentOps.off();
+            errorFileOps.off();
             if (content.length < 10) {
-              errorOps.on();
+              errorContentOps.on();
+            } else if (!file) {
+              errorFileOps.on();
             } else {
-              errorOps.off();
+              errorContentOps.off();
+              errorFileOps.off();
               onLoading();
               const [isSuccess, error] = await onPost({
                 content,

@@ -38,9 +38,14 @@ export default function AuthPage() {
 
   const onRegisterClick = async (
     email: string,
-    password: string
+    password: string,
+    name: string
   ): Promise<IResultError<boolean>> => {
-    const [session, error] = await account.operations.register(email, password);
+    const [session, error] = await account.operations.register(
+      email,
+      password,
+      name
+    );
     return [session !== null, error];
   };
 
@@ -73,7 +78,7 @@ export default function AuthPage() {
               <Login onSubmit={onLoginClick} text="Login" />
             </TabPanel>
             <TabPanel>
-              <Login onSubmit={onRegisterClick} text="Register" />
+              <Login newUser onSubmit={onRegisterClick} text="Register" />
             </TabPanel>
           </TabPanels>
         </Tabs>

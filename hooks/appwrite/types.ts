@@ -35,3 +35,8 @@ export interface ICollectionOps {
   ) => Promise<IResultError<Models.Document>>;
   remove: (documentId: string) => Promise<IResultError<{}>>;
 }
+
+export interface IBucketOps {
+  create: (data: File) => Promise<IResultError<Models.File>>;
+  getFile: (fileId: string) => URL;
+};

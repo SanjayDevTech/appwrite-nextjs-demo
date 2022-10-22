@@ -23,14 +23,20 @@ const passwordRegex =
 
 export interface ILoginProps {
   text: string;
-  onSubmit: (email: string, password: string) => Promise<IResultError<boolean>>;
+  onSubmit: (
+    email: string,
+    password: string,
+    name?: string
+  ) => Promise<IResultError<boolean>>;
+  newUser?: boolean;
 }
 
 export default function Login(props: ILoginProps) {
-  const { text, onSubmit } = props;
+  const { text, onSubmit, newUser } = props;
 
   const [email, handleEmail] = useInput("");
   const [password, handlePassword] = useInput("");
+  const [name, handleName] = useInput("");
   const [loading, { on: onLoading, off: offLoading }] = useBoolean(false);
 
   const toast = useToast();
@@ -47,7 +53,7 @@ export default function Login(props: ILoginProps) {
     e.preventDefault();
     if (validateEmail(email) && validatePassword(password)) {
       onLoading();
-      const [isSuccess, error] = await onSubmit(email, password);
+      const [isSuccess, error] = await onSubmit(email, password, name);
       offLoading();
       if (isSuccess) {
         toast({
@@ -110,6 +116,21 @@ export default function Login(props: ILoginProps) {
           {renderStatus(email, isEmailValid)}
         </InputGroup>
       </FormControl>
+      {newUser && (
+        <FormControl>
+          <FormLabel>Name</FormLabel>
+          <InputGroup>
+            <Input
+              autoComplete="off"
+              value={name}
+              onChange={handleName}
+              type={"text"}
+              name={"name"}
+              placeholder={"Enter name"}
+            />
+          </InputGroup>
+        </FormControl>
+      )}
       <FormControl>
         <FormLabel>Password</FormLabel>
         <InputGroup>
