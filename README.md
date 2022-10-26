@@ -85,7 +85,7 @@ Use `sample.env` as a reference.
 
 Go to the Appwrite console and get the following details from the project you created.
 
-- host
+- endpoint
 - project id
 - database id
 - collection id

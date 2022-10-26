@@ -1,16 +1,24 @@
 import { Account, Client, Databases } from "appwrite";
 import { useMemo } from "react";
 
+function normalizeEndpoint(
+  endpoint: string,
+): string {
+  if (endpoint.endsWith("/")) {
+    return endpoint.substring(0, endpoint.length - 1);
+  }
+  return endpoint;
+}
+
 export default function useClient(
-  host: string,
-  projectId: string,
-  ssl?: boolean
+  endpoint: string,
+  projectId: string
 ): Client {
   const client = useMemo(() => {
     return new Client()
-      .setEndpoint(`http${ssl ? "s" : ""}://${host}/v1`)
+      .setEndpoint(normalizeEndpoint(endpoint))
       .setProject(projectId);
-  }, [host, projectId]);
+  }, [endpoint, projectId]);
 
   return client;
 }

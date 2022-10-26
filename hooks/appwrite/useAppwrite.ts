@@ -1,4 +1,3 @@
-import { Models, Databases } from "appwrite";
 import { IAccountOps, IBucketOps, ICollectionOps } from "./types";
 import useAccount from "./useAccount";
 import useBucket from "./useBucket";
@@ -11,9 +10,8 @@ export default function useAppwrite(): [
   IBucketOps
 ] {
   const client = useClient(
-    process.env.NEXT_PUBLIC_APPWRITE_HOST,
+    process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT,
     process.env.NEXT_PUBLIC_APPWRITE_PROJECT,
-    process.env.NEXT_PUBLIC_APPWRITE_SSL === "true"
   );
 
   const account = useAccount(client);
