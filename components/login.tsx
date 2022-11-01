@@ -51,7 +51,9 @@ export default function Login(props: ILoginProps) {
 
   const onSubmitHandler = async (e: any) => {
     e.preventDefault();
-    if (validateEmail(email) && validatePassword(password)) {
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+    if (isEmailValid && isPasswordValid) {
       onLoading();
       const [isSuccess, error] = await onSubmit(email, password, name);
       offLoading();
@@ -74,9 +76,19 @@ export default function Login(props: ILoginProps) {
           isClosable: true,
         });
       }
+    } else if (!isEmailValid) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
     } else {
       toast({
-        title: "Invalid email or password",
+        title: "Invalid Password",
+        description:
+          "Please enter a valid password including atleast one Capital, Small, Numeric, Symbol.",
         status: "error",
         duration: 9000,
         isClosable: true,
